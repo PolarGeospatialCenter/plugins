@@ -27,8 +27,9 @@ import (
 )
 
 const (
-	DisableIPv6SysctlTemplate = "net.ipv6.conf.%s.disable_ipv6"
+	DisableIPv6SysctlTemplate  = "net.ipv6.conf.%s.disable_ipv6"
 	IPv6AutoconfSysctlTemplate = "net.ipv6.conf.%s.autoconf"
+	IPv6AcceptRASysctlTemplate = "net.ipv6.conf.%s.accept_ra"
 )
 
 // ConfigureIface takes the result of IPAM plugin and
@@ -67,6 +68,7 @@ func ConfigureIface(ifName string, res *current.Result) error {
 			for _, iface := range [2]string{"lo", ifName} {
 				ipv6SysctlValueName := fmt.Sprintf(DisableIPv6SysctlTemplate, iface)
 				ipv6autoconfSysctlValueName := fmt.Sprintf(IPv6AutoconfSysctlTemplate, iface)
+				ipv6acceptRASysctlValueName := fmt.Sprintf(IPv6AcceptRASysctlTemplate, iface)
 
 				// Read current sysctl value
 				value, err := sysctl.Sysctl(ipv6SysctlValueName)
@@ -83,6 +85,10 @@ func ConfigureIface(ifName string, res *current.Result) error {
 				_, err = sysctl.Sysctl(ipv6autoconfSysctlValueName, "0")
 				if err != nil {
 					return fmt.Errorf("failed to enable IPv6 for interface %q (%s=%s): %v", iface, ipv6autoconfSysctlValueName, value, err)
+				}
+				_, err = sysctl.Sysctl(ipv6acceptRASysctlValueName, "0")
+				if err != nil {
+					return fmt.Errorf("failed to enable IPv6 for interface %q (%s=%s): %v", iface, ipv6acceptRASysctlValueName, value, err)
 				}
 			}
 			has_enabled_ipv6 = true
